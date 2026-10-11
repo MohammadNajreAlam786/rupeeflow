@@ -87,12 +87,12 @@ RupeeFlow enforces strict mathematical invariants managed by a single source of 
 
 ### Deterministic Financial Health Index (0–100)
 
-| Pillar | Weight | Description |
-| :--- | :---: | :--- |
-| **Budget Adherence** | **30%** | Compares cumulative spend pace to expected day-in-cycle benchmark. |
-| **Daily Cushion** | **25%** | Evaluates safe daily allowance against the minimum ₹150/day survival floor. |
+| Pillar                  | Weight  | Description                                                                        |
+| :---------------------- | :-----: | :--------------------------------------------------------------------------------- |
+| **Budget Adherence**    | **30%** | Compares cumulative spend pace to expected day-in-cycle benchmark.                 |
+| **Daily Cushion**       | **25%** | Evaluates safe daily allowance against the minimum ₹150/day survival floor.        |
 | **Commitment Coverage** | **25%** | Tests whether liquid cash covers upcoming mandatory bills (coverage ratio ≥ 1.0x). |
-| **Savings Buffer** | **20%** | Rewards reserving 10%–15% (₹1,000–₹1,500) of capital in emergency goals. |
+| **Savings Buffer**      | **20%** | Rewards reserving 10%–15% (₹1,000–₹1,500) of capital in emergency goals.           |
 
 **Risk Levels**:
 - 🟢 **Low Risk (75–100)**: Resilient cashflow, commitments covered 2x+, healthy daily cushion.
@@ -144,21 +144,6 @@ npm run build
 # Preview production build locally
 npm run preview
 ```
-
----
-
-## 🌐 Deployment Instructions
-
-### Deploy to Vercel (Recommended)
-1. Fork or push this repository to GitHub.
-2. Sign in to [Vercel](https://vercel.com) and click **"Add New Project"**.
-3. Import your `rupeeflow` repository.
-4. Framework Preset: **Vite**.
-5. Build Command: `npm run build`.
-6. Output Directory: `dist`.
-7. Click **Deploy**.
-
-> Note: The included [`vercel.json`](vercel.json) already configures SPA route rewrites (`/(.*) -> /index.html`).
 
 ---
 
