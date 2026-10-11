@@ -87,7 +87,7 @@ export const SavingsGoalsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-amber-400 mt-1">
             {formatINR(financialState.totalSavingsAllocated)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {Math.round((financialState.totalSavingsAllocated / financialState.totalIncome) * 100)}% of your ₹{financialState.totalIncome} budget
           </p>
         </div>
@@ -97,7 +97,7 @@ export const SavingsGoalsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-emerald-400 mt-1">
             {formatINR(financialState.availableCashBalance)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             Eligible to deposit into goals anytime
           </p>
         </div>
@@ -107,7 +107,7 @@ export const SavingsGoalsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-indigo-400 mt-1">
             {financialState.healthScore.components.savingsBuffer.score} / 20 pts
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {financialState.healthScore.components.savingsBuffer.label}
           </p>
         </div>

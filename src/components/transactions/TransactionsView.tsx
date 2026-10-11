@@ -216,7 +216,7 @@ export const TransactionsView: React.FC = () => {
           <div className="py-12 text-center space-y-3">
             <Receipt className="w-10 h-10 text-slate-600 mx-auto" />
             <h4 className="text-sm font-semibold text-slate-300">No transactions found</h4>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-400 max-w-sm mx-auto">
               No matching records for your current filters. Try searching for something else or add a new transaction.
             </p>
             <button

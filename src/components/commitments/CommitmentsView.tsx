@@ -93,7 +93,7 @@ export const CommitmentsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-indigo-400 mt-1">
             {formatINR(financialState.reservedCommitments)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {upcomingCount} pending payments locked from safe-to-spend
           </p>
         </div>
@@ -103,7 +103,7 @@ export const CommitmentsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-emerald-400 mt-1">
             {formatINR(financialState.paidCommitments)}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {paidCount} bills successfully paid and logged in ledger
           </p>
         </div>
@@ -113,7 +113,7 @@ export const CommitmentsView: React.FC = () => {
           <div className="text-2xl font-bold font-mono-num text-cyan-400 mt-1">
             {financialState.healthScore.components.commitmentCoverage.score} / 25 pts
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1">
             {financialState.healthScore.components.commitmentCoverage.label}
           </p>
         </div>
@@ -177,7 +177,7 @@ export const CommitmentsView: React.FC = () => {
       {/* Commitments Table */}
       <div className="p-6 rounded-2xl bg-[#0F172A] border border-slate-800 shadow-xl overflow-hidden">
         {filteredCommitments.length === 0 ? (
-          <div className="py-12 text-center text-slate-500 text-xs">
+          <div className="py-12 text-center text-slate-400 text-xs">
             No commitments match this status filter.
           </div>
         ) : (

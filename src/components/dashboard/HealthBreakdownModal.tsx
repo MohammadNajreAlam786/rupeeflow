@@ -197,7 +197,7 @@ export const HealthBreakdownModal: React.FC<HealthBreakdownModalProps> = ({
       )}
 
       {/* Legal & Educational Disclaimer */}
-      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 text-[11px] text-slate-500 flex items-start gap-2">
+      <div className="p-3 rounded-xl bg-slate-900/40 border border-slate-800/60 text-[11px] text-slate-400 flex items-start gap-2">
         <Info className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
         <p className="leading-relaxed">
           <strong>Important Disclaimer:</strong> This health score and risk matrix is an automated

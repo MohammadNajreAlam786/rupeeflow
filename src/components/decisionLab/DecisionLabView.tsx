@@ -510,10 +510,15 @@ export const DecisionLabView: React.FC = () => {
                 : 'bg-slate-900/80 border-slate-800'
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Deterministic Impact Analysis
-              </span>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Deterministic Impact Analysis
+                </span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                  Preview Only • Ledger Unchanged
+                </span>
+              </div>
 
               {/* Verdict Pill */}
               <span

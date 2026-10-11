@@ -232,7 +232,7 @@ export const HealthScoreGauge: React.FC<HealthScoreGaugeProps> = ({
       </div>
 
       {/* Disclaimers & Advice notice */}
-      <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-500">
+      <div className="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
         <span className="flex items-center gap-1">
           <HelpCircle className="w-3 h-3 text-slate-400" />
           Deterministic financial simulation. Not professional advice.

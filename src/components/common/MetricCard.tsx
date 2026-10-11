@@ -67,9 +67,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       } ${onClick ? 'cursor-pointer hover:bg-slate-800/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50' : ''} ${className}`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
-        <span className="text-xs font-medium uppercase tracking-wider text-slate-400 group-hover:text-slate-300 transition-colors">
+        <h3 className="text-xs font-medium uppercase tracking-wider text-slate-400 group-hover:text-slate-300 transition-colors m-0">
           {title}
-        </span>
+        </h3>
         <div
           className={`p-2.5 rounded-xl border shrink-0 transition-transform duration-300 group-hover:scale-105 ${iconVariantClasses[variant]}`}
         >
@@ -78,9 +78,9 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       </div>
 
       <div className="flex items-baseline gap-2 flex-wrap">
-        <h3 className="text-2xl sm:text-3xl font-bold text-white font-mono-num tracking-tight">
+        <p className="text-2xl sm:text-3xl font-bold text-white font-mono-num tracking-tight m-0">
           {value}
-        </h3>
+        </p>
         {delta && (
           <span
             className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${

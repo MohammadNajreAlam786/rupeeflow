@@ -44,9 +44,9 @@ export const Sidebar: React.FC = () => {
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <h1 className="text-lg font-bold font-heading tracking-tight text-white m-0">
+            <span className="text-lg font-bold font-heading tracking-tight text-white m-0">
               RupeeFlow
-            </h1>
+            </span>
             <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded border border-emerald-500/30">
               v1.0
             </span>
@@ -57,7 +57,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Navigation Links */}
       <nav className="flex-1 space-y-1.5 overflow-y-auto">
-        <div className="text-[10px] uppercase tracking-wider text-slate-500 px-3 mb-2 font-semibold">
+        <div className="text-[10px] uppercase tracking-wider text-slate-400 px-3 mb-2 font-semibold">
           Finance Management
         </div>
 

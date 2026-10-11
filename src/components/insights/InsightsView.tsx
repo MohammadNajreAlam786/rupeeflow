@@ -167,7 +167,7 @@ export const InsightsView: React.FC = () => {
             <div className="text-base font-bold font-mono-num text-white mt-0.5">
               {formatINR(forecast.burnRatePerDay)}/day
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               vs ₹{forecast.idealBurnRatePerDay}/day ideal benchmark
             </p>
           </div>
@@ -177,18 +177,32 @@ export const InsightsView: React.FC = () => {
             <div className="text-base font-bold font-mono-num text-indigo-400 mt-0.5">
               {formatINR(forecast.projectedUpcomingCommitments)}
             </div>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-400">
               Mandatory scheduled outflow
             </p>
           </div>
 
           <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-            <span className="text-xs text-slate-400">Runout / Depletion Day</span>
-            <div className="text-base font-bold font-mono-num text-white mt-0.5">
-              {forecast.estimatedRunoutDay ? `Day ${forecast.estimatedRunoutDay} (Warning)` : 'None (Sustained)'}
+            <span className="text-xs text-slate-400">30-Day Runway Status</span>
+            <div
+              className={`text-base font-bold font-mono-num mt-0.5 ${
+                forecast.estimatedRunoutDay
+                  ? 'text-rose-400'
+                  : forecast.projectedEndBalance >= 200
+                  ? 'text-emerald-400'
+                  : 'text-amber-400'
+              }`}
+            >
+              {forecast.estimatedRunoutDay
+                ? `Depletes Day ${forecast.estimatedRunoutDay}`
+                : forecast.projectedEndBalance >= 200
+                ? 'Sustains All 30 Days'
+                : 'Sustains Day 30 (Tight)'}
             </div>
-            <p className="text-[11px] text-slate-500">
-              {forecast.projectedEndBalance >= 0 ? 'Comfortably covers all 30 days' : 'Capital runs dry before month end!'}
+            <p className="text-[11px] text-slate-400">
+              {forecast.estimatedRunoutDay
+                ? `Projected ₹${forecast.projectedDeficit.toLocaleString('en-IN')} deficit before Day ${forecast.totalDays}`
+                : `Projected ₹${forecast.projectedEndBalance.toLocaleString('en-IN')} end buffer`}
             </p>
           </div>
         </div>
@@ -368,7 +382,7 @@ export const InsightsView: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2 font-mono-num shrink-0">
                     <span className="font-bold text-white">{formatINR(cat.value)}</span>
-                    <span className="text-slate-500 text-[11px] w-8 text-right">{pct}%</span>
+                    <span className="text-slate-400 text-[11px] w-8 text-right">{pct}%</span>
                   </div>
                 </div>
               );

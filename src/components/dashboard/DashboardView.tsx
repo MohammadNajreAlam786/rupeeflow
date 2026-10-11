@@ -94,21 +94,42 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
         <MetricCard
           title="Safe-to-Spend Pool"
           value={formatINR(financialState.safeToSpendAmount)}
-          subtitle={`Free discretionary cash after reserving ₹${financialState.reservedCommitments} for upcoming bills.`}
+          subtitle={
+            financialState.reservedCommitments > 0
+              ? `Free cash after auto-reserving ₹${financialState.reservedCommitments.toLocaleString('en-IN')} in escrow for upcoming bills.`
+              : 'Free discretionary cash with no pending bills reserved.'
+          }
           icon={ShieldCheck}
           variant={financialState.safeToSpendAmount <= 0 ? 'rose' : 'emerald'}
           highlight
+          delta={
+            financialState.reservedCommitments > 0
+              ? {
+                  value: 'Escrow Protected',
+                  isPositive: true,
+                  label: `₹${financialState.reservedCommitments.toLocaleString('en-IN')} locked`,
+                }
+              : undefined
+          }
         />
 
         {/* 3. Daily Allowance */}
         <MetricCard
           title="Daily Discretionary Allowance"
           value={`${formatINR(financialState.dailyAllowance)}/day`}
-          subtitle={`Spread across remaining ${financialState.daysRemaining} days (Day ${config.currentDay} of 30).`}
+          subtitle={`Spread across remaining ${financialState.daysRemaining} days (Day ${config.currentDay} of 30) • Survival floor: ₹${config.minDailySurvivalBudget}/day.`}
           icon={Calendar}
           variant={
             financialState.dailyAllowance < config.minDailySurvivalBudget ? 'amber' : 'emerald'
           }
+          delta={{
+            value:
+              financialState.dailyAllowance >= config.minDailySurvivalBudget
+                ? 'Above Survival Floor'
+                : 'Below Survival Floor',
+            isPositive: financialState.dailyAllowance >= config.minDailySurvivalBudget,
+            label: `(₹${config.minDailySurvivalBudget}/d min)`,
+          }}
         />
 
         {/* 4. Reserved Commitments */}
@@ -180,7 +201,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
                 <span className="text-sm font-bold font-mono-num text-white mt-1">
                   {formatINR(financialState.totalExpenses)}
                 </span>
-                <span className="text-[10px] text-slate-500">{spentPct.toFixed(0)}% of total</span>
+                <span className="text-[10px] text-slate-400">{spentPct.toFixed(0)}% of total</span>
               </div>
 
               <div className="flex flex-col">
@@ -191,7 +212,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
                 <span className="text-sm font-bold font-mono-num text-white mt-1">
                   {formatINR(financialState.totalSavingsAllocated)}
                 </span>
-                <span className="text-[10px] text-slate-500">{savingsPct.toFixed(0)}% of total</span>
+                <span className="text-[10px] text-slate-400">{savingsPct.toFixed(0)}% of total</span>
               </div>
 
               <div className="flex flex-col">
@@ -202,7 +223,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
                 <span className="text-sm font-bold font-mono-num text-white mt-1">
                   {formatINR(financialState.reservedCommitments)}
                 </span>
-                <span className="text-[10px] text-slate-500">{reservedPct.toFixed(0)}% of total</span>
+                <span className="text-[10px] text-slate-400">{reservedPct.toFixed(0)}% of total</span>
               </div>
 
               <div className="flex flex-col">
@@ -213,7 +234,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
                 <span className="text-sm font-bold font-mono-num text-emerald-400 mt-1">
                   {formatINR(financialState.safeToSpendAmount)}
                 </span>
-                <span className="text-[10px] text-slate-500">{safePct.toFixed(0)}% free cushion</span>
+                <span className="text-[10px] text-slate-400">{safePct.toFixed(0)}% free cushion</span>
               </div>
             </div>
           </div>
@@ -271,7 +292,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
 
           <div className="space-y-2.5">
             {upcomingCommitments.length === 0 ? (
-              <div className="p-6 text-center text-slate-500 text-xs bg-slate-900/50 rounded-xl">
+              <div className="p-6 text-center text-slate-400 text-xs bg-slate-900/50 rounded-xl">
                 All bills for this period are settled! No upcoming commitments.
               </div>
             ) : (

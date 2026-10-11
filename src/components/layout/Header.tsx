@@ -60,9 +60,9 @@ export const Header: React.FC<HeaderProps> = ({ onOpenAddTransaction }) => {
         {/* Title and breadcrumb */}
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold font-heading text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold font-heading text-white tracking-tight">
               {currentMeta.title}
-            </h2>
+            </h1>
             {activeTab === 'decisionLab' && (
               <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-indigo-400" /> Pure Sandbox

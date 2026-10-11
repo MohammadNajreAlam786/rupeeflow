@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useId } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -20,6 +20,8 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const previousActiveElementRef = useRef<HTMLElement | null>(null);
+  const titleId = useId();
+  const descId = useId();
 
   useEffect(() => {
     if (isOpen) {
@@ -119,15 +121,20 @@ export const Modal: React.FC<ModalProps> = ({
         className={`relative w-full ${maxWidthClasses[maxWidth]} bg-[#0F172A] border border-slate-700/80 rounded-2xl shadow-2xl z-10 overflow-hidden flex flex-col max-h-[90vh] my-auto animate-in zoom-in-95 duration-200 outline-none`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
+        aria-describedby={subtitle ? descId : undefined}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/40">
           <div>
-            <h3 id="modal-title" className="text-lg font-semibold text-white font-heading">
+            <h3 id={titleId} className="text-lg font-semibold text-white font-heading">
               {title}
             </h3>
-            {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+            {subtitle && (
+              <p id={descId} className="text-xs text-slate-400 mt-0.5">
+                {subtitle}
+              </p>
+            )}
           </div>
           <button
             onClick={onClose}
