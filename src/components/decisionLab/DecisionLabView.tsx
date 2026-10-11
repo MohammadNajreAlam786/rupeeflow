@@ -3,7 +3,6 @@ import {
   FlaskConical,
   ArrowRight,
   TrendingUp,
-  TrendingDown,
   AlertTriangle,
   AlertCircle,
   CheckCircle2,
@@ -14,7 +13,6 @@ import {
   CalendarX,
   PiggyBank,
   RotateCcw,
-  ShieldCheck,
   Check,
   X,
 } from 'lucide-react';
@@ -22,8 +20,7 @@ import { useFinance } from '../../context/FinanceContext';
 import {
   DecisionType,
   DecisionSimulationInput,
-  ExpenseCategory,
-  IncomeCategory,
+  Category,
 } from '../../types/finance';
 import { simulateFinancialDecision } from '../../engine/decisionSimulator';
 import { formatINR, EXPENSE_CATEGORIES, INCOME_CATEGORIES, CATEGORY_MAP } from '../../utils/formatters';
@@ -34,16 +31,14 @@ export const DecisionLabView: React.FC = () => {
     commitments,
     savingsGoals,
     config,
-    financialState,
     commitDecision,
-    setActiveTab,
   } = useFinance();
 
   // Simulation Form State
   const [decisionType, setDecisionType] = useState<DecisionType>('discretionary_purchase');
   const [amount, setAmount] = useState<number>(1500);
   const [title, setTitle] = useState<string>('Weekend Concert & Dinner');
-  const [selectedCategory, setSelectedCategory] = useState<string>('shopping');
+  const [selectedCategory, setSelectedCategory] = useState<Category>('shopping');
   const [selectedCommitmentId, setSelectedCommitmentId] = useState<string>('');
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
 
@@ -57,29 +52,29 @@ export const DecisionLabView: React.FC = () => {
       type: 'discretionary_purchase' as DecisionType,
       amount: 1500,
       title: 'Weekend Music Concert Pass',
-      category: 'entertainment',
+      category: 'entertainment' as Category,
     },
     {
       label: 'Freelance UI Gig (+₹3,000)',
       type: 'new_income' as DecisionType,
       amount: 3000,
       title: 'Freelance Landing Page Contract',
-      category: 'freelance',
+      category: 'freelance' as Category,
     },
     {
       label: 'Cancel Gym Pass (-₹800)',
       type: 'cancel_subscription' as DecisionType,
       amount: 800,
       title: 'Cancel Campus Gym Pass',
-      category: 'health',
-      commitmentId: activeSubs.find((c) => c.title.toLowerCase().includes('gym'))?.id || activeSubs[0]?.id,
+      category: 'health' as Category,
+      commitmentId: activeSubs.find((c) => c.title.toLowerCase().includes('gym'))?.id || activeSubs[0]?.id || '',
     },
     {
       label: 'Emergency Screen Fix (₹1,800)',
       type: 'unexpected_expense' as DecisionType,
       amount: 1800,
       title: 'Smartphone Screen Glass Replacement',
-      category: 'shopping',
+      category: 'shopping' as Category,
     },
     {
       label: 'Save for Goa (+₹500)',
@@ -96,11 +91,11 @@ export const DecisionLabView: React.FC = () => {
       type: decisionType,
       title,
       amount: Number(amount) || 0,
-      category: selectedCategory as any,
-      commitmentId: selectedCommitmentId || (decisionType === 'cancel_subscription' ? activeSubs[0]?.id : undefined),
-      goalId: selectedGoalId || (decisionType === 'savings_contribution' ? savingsGoals[0]?.id : undefined),
+      category: selectedCategory,
+      commitmentId: decisionType === 'cancel_subscription' ? (selectedCommitmentId || undefined) : undefined,
+      goalId: decisionType === 'savings_contribution' ? (selectedGoalId || savingsGoals[0]?.id) : undefined,
     };
-  }, [decisionType, title, amount, selectedCategory, selectedCommitmentId, selectedGoalId, activeSubs, savingsGoals]);
+  }, [decisionType, title, amount, selectedCategory, selectedCommitmentId, selectedGoalId, savingsGoals]);
 
   const simulation = useMemo(() => {
     return simulateFinancialDecision(
@@ -114,23 +109,94 @@ export const DecisionLabView: React.FC = () => {
 
   const { current, simulated, delta, explanation, impactVerdict, warnings, affordabilityChecks } = simulation;
 
+  // Validation for committing decisions
+  const isSubscriptionCancel = decisionType === 'cancel_subscription';
+  const isSubscriptionValid = isSubscriptionCancel
+    ? Boolean(selectedCommitmentId && activeSubs.some((s) => s.id === selectedCommitmentId))
+    : true;
+  const isAmountValid = isSubscriptionCancel
+    ? isSubscriptionValid
+    : typeof amount === 'number' && !isNaN(amount) && amount > 0;
+
+  const validationMessage = useMemo(() => {
+    if (isSubscriptionCancel && !selectedCommitmentId) {
+      return 'Select an active subscription to calculate savings and commit cancellation.';
+    }
+    if (!isSubscriptionCancel && (!amount || amount <= 0)) {
+      return 'Enter a positive amount greater than ₹0 to simulate and commit this decision.';
+    }
+    return null;
+  }, [isSubscriptionCancel, selectedCommitmentId, amount]);
+
   // Handle Preset Click
   const handleApplyPreset = (preset: typeof PRESETS[0]) => {
     setDecisionType(preset.type);
-    setAmount(preset.amount);
     setTitle(preset.title);
-    if (preset.category) setSelectedCategory(preset.category);
-    if (preset.commitmentId) setSelectedCommitmentId(preset.commitmentId);
-    if (preset.goalId) setSelectedGoalId(preset.goalId);
+    if (preset.type === 'cancel_subscription') {
+      const targetSub = activeSubs.find((c) => c.id === preset.commitmentId) || activeSubs[0];
+      if (targetSub) {
+        setSelectedCommitmentId(targetSub.id);
+        setAmount(targetSub.amount);
+        setTitle(`Cancel ${targetSub.title}`);
+      } else {
+        setSelectedCommitmentId('');
+        setAmount(0);
+      }
+    } else {
+      setAmount(preset.amount);
+      if (preset.category) setSelectedCategory(preset.category);
+      if (preset.goalId) setSelectedGoalId(preset.goalId);
+    }
+  };
+
+  // Synchronized decision type switcher
+  const handleSelectDecisionType = (type: DecisionType) => {
+    setDecisionType(type);
+    if (type === 'cancel_subscription') {
+      if (selectedCommitmentId) {
+        const found = activeSubs.find((s) => s.id === selectedCommitmentId);
+        if (found) {
+          setAmount(found.amount);
+          setTitle(`Cancel ${found.title}`);
+        }
+      } else {
+        setAmount(0);
+        setTitle('Cancel Subscription');
+      }
+    } else if (type === 'savings_contribution') {
+      if (!selectedGoalId && savingsGoals.length > 0) {
+        setSelectedGoalId(savingsGoals[0].id);
+      }
+      if (amount <= 0) setAmount(500);
+      setTitle('Deposit to Savings Goal');
+    } else {
+      if (amount <= 0) setAmount(1500);
+      setTitle(type === 'new_income' ? 'Freelance Gig Contract' : 'Weekend Concert & Dinner');
+    }
+  };
+
+  // Synchronized subscription select handler
+  const handleSelectSubscription = (subId: string) => {
+    setSelectedCommitmentId(subId);
+    const found = activeSubs.find((c) => c.id === subId);
+    if (found) {
+      setAmount(found.amount);
+      setTitle(`Cancel ${found.title}`);
+    } else {
+      setAmount(0);
+      setTitle('Cancel Subscription');
+    }
   };
 
   // Commit decision into live state
   const handleCommit = () => {
+    if (!isAmountValid) return;
     commitDecision(simulationInput);
     // Reset to clean state
     setTitle('Weekend Concert & Dinner');
     setAmount(1500);
     setDecisionType('discretionary_purchase');
+    setSelectedCommitmentId('');
   };
 
   // Reset simulation sandbox
@@ -139,6 +205,7 @@ export const DecisionLabView: React.FC = () => {
     setAmount(1500);
     setTitle('Weekend Concert & Dinner');
     setSelectedCategory('shopping');
+    setSelectedCommitmentId('');
   };
 
   return (
@@ -202,13 +269,13 @@ export const DecisionLabView: React.FC = () => {
 
           {/* Decision Type Picker */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-2">
+            <span id="decision-type-group-label" className="block text-xs font-medium text-slate-400 mb-2">
               Decision Category
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            </span>
+            <div role="group" aria-labelledby="decision-type-group-label" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => setDecisionType('discretionary_purchase')}
+                onClick={() => handleSelectDecisionType('discretionary_purchase')}
                 className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
                   decisionType === 'discretionary_purchase'
                     ? 'bg-rose-500/15 border-rose-500/50 text-rose-300 font-semibold'
@@ -221,7 +288,7 @@ export const DecisionLabView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setDecisionType('unexpected_expense')}
+                onClick={() => handleSelectDecisionType('unexpected_expense')}
                 className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
                   decisionType === 'unexpected_expense'
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 font-semibold'
@@ -234,7 +301,7 @@ export const DecisionLabView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setDecisionType('new_income')}
+                onClick={() => handleSelectDecisionType('new_income')}
                 className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
                   decisionType === 'new_income'
                     ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300 font-semibold'
@@ -247,7 +314,7 @@ export const DecisionLabView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setDecisionType('cancel_subscription')}
+                onClick={() => handleSelectDecisionType('cancel_subscription')}
                 className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 ${
                   decisionType === 'cancel_subscription'
                     ? 'bg-indigo-500/15 border-indigo-500/50 text-indigo-300 font-semibold'
@@ -260,7 +327,7 @@ export const DecisionLabView: React.FC = () => {
 
               <button
                 type="button"
-                onClick={() => setDecisionType('savings_contribution')}
+                onClick={() => handleSelectDecisionType('savings_contribution')}
                 className={`p-2.5 rounded-xl text-left border transition-all text-xs flex items-center gap-2 sm:col-span-2 ${
                   decisionType === 'savings_contribution'
                     ? 'bg-amber-500/15 border-amber-500/50 text-amber-300 font-semibold'
@@ -276,7 +343,7 @@ export const DecisionLabView: React.FC = () => {
           {/* Amount Field */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="text-xs font-medium text-slate-400">
+              <label htmlFor="decision-amount-input" className="text-xs font-medium text-slate-400">
                 Decision Amount (₹)
               </label>
               <span className="text-xs font-mono-num font-bold text-white">
@@ -289,44 +356,55 @@ export const DecisionLabView: React.FC = () => {
                 ₹
               </span>
               <input
+                id="decision-amount-input"
                 type="number"
                 min="0"
                 step="50"
                 value={amount}
+                disabled={decisionType === 'cancel_subscription'}
                 onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
-                className="w-full pl-8 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono-num font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors"
+                className={`w-full pl-8 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono-num font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors ${
+                  decisionType === 'cancel_subscription' ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
                 placeholder="1500"
               />
             </div>
 
             {/* Quick Amount Adjust Steppers */}
-            <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-              {[200, 500, 1000, 2000].map((step) => (
+            {decisionType !== 'cancel_subscription' ? (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {[200, 500, 1000, 2000].map((step) => (
+                  <button
+                    key={step}
+                    type="button"
+                    onClick={() => setAmount((prev) => (prev || 0) + step)}
+                    className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono-num transition-colors"
+                  >
+                    +{step}
+                  </button>
+                ))}
                 <button
-                  key={step}
                   type="button"
-                  onClick={() => setAmount((prev) => (prev || 0) + step)}
-                  className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono-num transition-colors"
+                  onClick={() => setAmount(500)}
+                  className="px-2 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 transition-colors"
                 >
-                  +{step}
+                  Clear
                 </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setAmount(500)}
-                className="px-2 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 transition-colors"
-              >
-                Clear
-              </button>
-            </div>
+              </div>
+            ) : (
+              <p className="text-[11px] text-slate-400 mt-1.5">
+                Amount is automatically synchronized to the chosen subscription&apos;s cost.
+              </p>
+            )}
           </div>
 
           {/* Description Title */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+            <label htmlFor="decision-title-input" className="block text-xs font-medium text-slate-400 mb-1.5">
               Decision Note / Context
             </label>
             <input
+              id="decision-title-input"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -338,19 +416,16 @@ export const DecisionLabView: React.FC = () => {
           {/* Context-Specific Target Pickers */}
           {decisionType === 'cancel_subscription' && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              <label htmlFor="decision-subscription-select" className="block text-xs font-medium text-slate-400 mb-1.5">
                 Select Active Subscription to Cancel
               </label>
               <select
+                id="decision-subscription-select"
                 value={selectedCommitmentId}
-                onChange={(e) => {
-                  setSelectedCommitmentId(e.target.value);
-                  const found = commitments.find((c) => c.id === e.target.value);
-                  if (found) setAmount(found.amount);
-                }}
+                onChange={(e) => handleSelectSubscription(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
-                <option value="">-- Choose active subscription --</option>
+                <option value="">-- Choose active subscription to cancel --</option>
                 {activeSubs.map((sub) => (
                   <option key={sub.id} value={sub.id}>
                     {sub.title} ({formatINR(sub.amount)}) — Due Day {sub.dueDayInPeriod}
@@ -362,10 +437,11 @@ export const DecisionLabView: React.FC = () => {
 
           {decisionType === 'savings_contribution' && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              <label htmlFor="decision-goal-select" className="block text-xs font-medium text-slate-400 mb-1.5">
                 Target Savings Goal
               </label>
               <select
+                id="decision-goal-select"
                 value={selectedGoalId}
                 onChange={(e) => setSelectedGoalId(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
@@ -381,12 +457,13 @@ export const DecisionLabView: React.FC = () => {
 
           {(decisionType === 'discretionary_purchase' || decisionType === 'unexpected_expense') && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              <label htmlFor="decision-expense-category-select" className="block text-xs font-medium text-slate-400 mb-1.5">
                 Expense Category
               </label>
               <select
+                id="decision-expense-category-select"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value as Category)}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
                 {EXPENSE_CATEGORIES.map((cat) => (
@@ -400,12 +477,13 @@ export const DecisionLabView: React.FC = () => {
 
           {decisionType === 'new_income' && (
             <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">
+              <label htmlFor="decision-income-category-select" className="block text-xs font-medium text-slate-400 mb-1.5">
                 Income Category
               </label>
               <select
+                id="decision-income-category-select"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => setSelectedCategory(e.target.value as Category)}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
                 {INCOME_CATEGORIES.map((cat) => (
@@ -697,6 +775,12 @@ export const DecisionLabView: React.FC = () => {
               <p className="text-[11px] text-slate-400">
                 Committing permanently records this in your active ledger or updates your commitments.
               </p>
+              {validationMessage && (
+                <div className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg mt-2">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                  <span>{validationMessage}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -711,7 +795,13 @@ export const DecisionLabView: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCommit}
-                className="flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl shadow-glow-emerald transition-all flex items-center justify-center gap-2 cursor-pointer"
+                disabled={!isAmountValid}
+                className={`flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+                  isAmountValid
+                    ? 'text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-glow-emerald cursor-pointer'
+                    : 'text-slate-500 bg-slate-800 border border-slate-700 cursor-not-allowed opacity-60'
+                }`}
+                aria-disabled={!isAmountValid}
               >
                 <Check className="w-4 h-4" />
                 <span>Commit Decision</span>

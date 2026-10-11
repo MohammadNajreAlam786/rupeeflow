@@ -48,10 +48,23 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   return (
     <div
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
       onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      aria-label={onClick ? `${title}: ${value}` : undefined}
       className={`relative p-5 rounded-2xl bg-[#0F172A]/90 border border-slate-800 transition-all duration-300 hover:border-slate-700 hover:translate-y-[-2px] group ${
         highlight ? highlightBorder[variant] : ''
-      } ${onClick ? 'cursor-pointer hover:bg-slate-800/40' : ''} ${className}`}
+      } ${onClick ? 'cursor-pointer hover:bg-slate-800/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/50' : ''} ${className}`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <span className="text-xs font-medium uppercase tracking-wider text-slate-400 group-hover:text-slate-300 transition-colors">

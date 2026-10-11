@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Transaction, TransactionType, Category } from '../../types/finance';
-import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, CATEGORY_MAP, formatINR } from '../../utils/formatters';
+import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, CATEGORY_MAP } from '../../utils/formatters';
 
 interface TransactionModalProps {
   isOpen: boolean;
@@ -88,10 +88,10 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Type Picker */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <span className="block text-xs font-medium text-slate-400 mb-1.5">
             Transaction Type
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+          </span>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Transaction Type">
             <button
               type="button"
               onClick={() => {
@@ -125,7 +125,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Amount */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="tx-amount" className="block text-xs font-medium text-slate-400 mb-1.5">
             Amount (₹)
           </label>
           <div className="relative">
@@ -133,6 +133,7 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
               ₹
             </span>
             <input
+              id="tx-amount"
               type="number"
               min="1"
               step="any"
@@ -147,10 +148,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Title / Merchant */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="tx-title" className="block text-xs font-medium text-slate-400 mb-1.5">
             Title / Description
           </label>
           <input
+            id="tx-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -161,10 +163,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Category */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="tx-category" className="block text-xs font-medium text-slate-400 mb-1.5">
             Category
           </label>
           <select
+            id="tx-category"
             value={category}
             onChange={(e) => setCategory(e.target.value as Category)}
             className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-emerald-500"
@@ -186,10 +189,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
         {/* Date and Day in Period */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+            <label htmlFor="tx-date" className="block text-xs font-medium text-slate-400 mb-1.5">
               Date
             </label>
             <input
+              id="tx-date"
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
@@ -198,10 +202,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+            <label htmlFor="tx-day-in-period" className="block text-xs font-medium text-slate-400 mb-1.5">
               Day in 30d Period (1-30)
             </label>
             <input
+              id="tx-day-in-period"
               type="number"
               min="1"
               max="30"
@@ -214,10 +219,11 @@ export const TransactionModal: React.FC<TransactionModalProps> = ({
 
         {/* Notes */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="tx-notes" className="block text-xs font-medium text-slate-400 mb-1.5">
             Notes / Split Details (Optional)
           </label>
           <input
+            id="tx-notes"
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

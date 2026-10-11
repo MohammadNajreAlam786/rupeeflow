@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, AlertTriangle, AlertCircle, ChevronRight, HelpCircle } from 'lucide-react';
+import { ChevronRight, HelpCircle } from 'lucide-react';
 import { HealthScoreBreakdown } from '../../types/finance';
 import { RiskBadge } from './Badge';
 
@@ -39,8 +39,17 @@ export const HealthScoreGauge: React.FC<HealthScoreGaugeProps> = ({
   if (compact) {
     return (
       <div
+        role="button"
+        tabIndex={0}
         onClick={onOpenBreakdown}
-        className="flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-slate-700 cursor-pointer transition-all"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onOpenBreakdown?.();
+          }
+        }}
+        aria-label={`Financial health score: ${overallScore} out of 100, risk level: ${riskLevel}. Click to view math audit.`}
+        className="flex items-center gap-3 p-3 bg-slate-900/60 border border-slate-800 rounded-xl hover:border-slate-700 cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
       >
         <div className="relative w-12 h-12 flex items-center justify-center">
           <svg className="w-12 h-12 transform -rotate-90">

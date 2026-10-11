@@ -2,14 +2,9 @@ import React, { useState } from 'react';
 import {
   PiggyBank,
   Plus,
-  ShieldCheck,
-  TrendingUp,
-  Sparkles,
   Edit2,
   Trash2,
   ArrowRightLeft,
-  Calendar,
-  Lock,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { SavingsGoal } from '../../types/finance';
@@ -21,7 +16,6 @@ export const SavingsGoalsView: React.FC = () => {
   const {
     savingsGoals,
     financialState,
-    config,
     addSavingsGoal,
     updateSavingsGoal,
     deleteSavingsGoal,

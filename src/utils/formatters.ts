@@ -19,6 +19,12 @@ export function formatINR(amount: number, options?: { showDecimals?: boolean; sh
     minimumFractionDigits: showDecimals ? 2 : 0,
   }).format(absAmount);
 
+  const isZero = formattedNumber === '0' || formattedNumber === '0.00';
+
+  if (isZero) {
+    return showDecimals ? '₹0.00' : '₹0';
+  }
+
   if (isNegative) {
     return `-₹${formattedNumber}`;
   }

@@ -1,7 +1,7 @@
 // RupeeFlow Central Finance Context
 // Handles persistent storage, pure state calculations, CRUD operations, and simulation commits.
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Transaction,
@@ -88,11 +88,12 @@ interface FinanceContextType {
 const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // 1. Initialize State from localStorage or Seed Data
+  // 1. Initialize State from localStorage or Seed Data with safe fallback validation
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.TRANSACTIONS);
-      return saved ? JSON.parse(saved) : INITIAL_TRANSACTIONS;
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_TRANSACTIONS;
     } catch {
       return INITIAL_TRANSACTIONS;
     }
@@ -101,7 +102,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [commitments, setCommitments] = useState<Commitment[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.COMMITMENTS);
-      return saved ? JSON.parse(saved) : INITIAL_COMMITMENTS;
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_COMMITMENTS;
     } catch {
       return INITIAL_COMMITMENTS;
     }
@@ -110,7 +112,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
-      return saved ? JSON.parse(saved) : INITIAL_SAVINGS_GOALS;
+      const parsed = saved ? JSON.parse(saved) : null;
+      return Array.isArray(parsed) ? parsed : INITIAL_SAVINGS_GOALS;
     } catch {
       return INITIAL_SAVINGS_GOALS;
     }
@@ -119,7 +122,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [config, setConfig] = useState<BudgetConfig>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEYS.CONFIG);
-      return saved ? JSON.parse(saved) : DEFAULT_BUDGET_CONFIG;
+      const parsed = saved ? JSON.parse(saved) : null;
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed) && typeof parsed.initialBudget === 'number'
+        ? parsed
+        : DEFAULT_BUDGET_CONFIG;
     } catch {
       return DEFAULT_BUDGET_CONFIG;
     }
@@ -167,20 +173,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [transactions, commitments, savingsGoals, config]);
 
   // Toast Helpers
-  const showToast = (message: string, type: ToastNotification['type'] = 'info') => {
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  const showToast = useCallback((message: string, type: ToastNotification['type'] = 'info') => {
     const id = `${Date.now()}_${Math.random()}`;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       dismissToast(id);
     }, 4000);
-  };
-
-  const dismissToast = (id: string) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, [dismissToast]);
 
   // Transaction Actions
-  const addTransaction = (data: Omit<Transaction, 'id'>) => {
+  const addTransaction = useCallback((data: Omit<Transaction, 'id'>) => {
     const newTx: Transaction = {
       ...data,
       id: `tx_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
@@ -190,45 +196,45 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       `Added ${data.type === 'expense' ? 'expense' : 'income'}: ${data.title} (₹${data.amount})`,
       'success'
     );
-  };
+  }, [showToast]);
 
-  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
+  const updateTransaction = useCallback((id: string, updates: Partial<Transaction>) => {
     setTransactions((prev) =>
       prev.map((t) => (t.id === id ? { ...t, ...updates } : t))
     );
     showToast('Transaction updated successfully', 'success');
-  };
+  }, [showToast]);
 
-  const deleteTransaction = (id: string) => {
+  const deleteTransaction = useCallback((id: string) => {
     setTransactions((prev) => prev.filter((t) => t.id !== id));
     showToast('Transaction deleted', 'info');
-  };
+  }, [showToast]);
 
   // Commitment Actions
-  const addCommitment = (data: Omit<Commitment, 'id'>) => {
+  const addCommitment = useCallback((data: Omit<Commitment, 'id'>) => {
     const newCom: Commitment = {
       ...data,
       id: `com_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
     };
     setCommitments((prev) => [...prev, newCom]);
     showToast(`Added ${data.type}: ${data.title} (₹${data.amount})`, 'success');
-  };
+  }, [showToast]);
 
-  const updateCommitment = (id: string, updates: Partial<Commitment>) => {
+  const updateCommitment = useCallback((id: string, updates: Partial<Commitment>) => {
     setCommitments((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
     );
     showToast('Commitment updated', 'success');
-  };
+  }, [showToast]);
 
-  const deleteCommitment = (id: string) => {
+  const deleteCommitment = useCallback((id: string) => {
     setCommitments((prev) => prev.filter((c) => c.id !== id));
     showToast('Commitment removed', 'info');
-  };
+  }, [showToast]);
 
-  const markCommitmentPaid = (id: string) => {
+  const markCommitmentPaid = useCallback((id: string) => {
     const item = commitments.find((c) => c.id === id);
-    if (!item) return;
+    if (!item || item.status === 'paid') return;
 
     // Update commitment status to paid
     setCommitments((prev) =>
@@ -237,7 +243,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Record as real expense transaction
     const paymentTx: Transaction = {
-      id: `tx_pay_${Date.now()}`,
+      id: `tx_pay_${item.id}_${Date.now()}`,
       title: `${item.title} (Bill Paid)`,
       amount: item.amount,
       type: 'expense',
@@ -248,9 +254,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setTransactions((prev) => [paymentTx, ...prev]);
     showToast(`Paid ₹${item.amount} for ${item.title}. Safe-to-spend updated!`, 'success');
-  };
+  }, [commitments, config.currentDay, showToast]);
 
-  const cancelCommitment = (id: string) => {
+  const cancelCommitment = useCallback((id: string) => {
     const item = commitments.find((c) => c.id === id);
     if (!item) return;
 
@@ -258,10 +264,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       prev.map((c) => (c.id === id ? { ...c, status: 'cancelled' as const } : c))
     );
     showToast(`Cancelled ${item.title}. Unreserved ₹${item.amount}!`, 'info');
-  };
+  }, [commitments, showToast]);
 
   // Savings Goals Actions
-  const addSavingsGoal = (data: Omit<SavingsGoal, 'id' | 'currentAmount'>) => {
+  const addSavingsGoal = useCallback((data: Omit<SavingsGoal, 'id' | 'currentAmount'>) => {
     const newGoal: SavingsGoal = {
       ...data,
       id: `goal_${Date.now()}`,
@@ -269,21 +275,21 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     };
     setSavingsGoals((prev) => [...prev, newGoal]);
     showToast(`New savings goal created: ${data.title}`, 'success');
-  };
+  }, [showToast]);
 
-  const updateSavingsGoal = (id: string, updates: Partial<SavingsGoal>) => {
+  const updateSavingsGoal = useCallback((id: string, updates: Partial<SavingsGoal>) => {
     setSavingsGoals((prev) =>
       prev.map((g) => (g.id === id ? { ...g, ...updates } : g))
     );
     showToast('Goal updated', 'success');
-  };
+  }, [showToast]);
 
-  const deleteSavingsGoal = (id: string) => {
+  const deleteSavingsGoal = useCallback((id: string) => {
     setSavingsGoals((prev) => prev.filter((g) => g.id !== id));
     showToast('Savings goal deleted. Any locked funds returned to cash balance.', 'info');
-  };
+  }, [showToast]);
 
-  const contributeToGoal = (id: string, amount: number): boolean => {
+  const contributeToGoal = useCallback((id: string, amount: number): boolean => {
     if (amount <= 0) return false;
     if (amount > financialState.availableCashBalance) {
       showToast(
@@ -324,9 +330,9 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       showToast(`Added ₹${amount} to savings goal!`, 'success');
     }
     return true;
-  };
+  }, [financialState.availableCashBalance, showToast]);
 
-  const withdrawFromGoal = (id: string, amount: number): boolean => {
+  const withdrawFromGoal = useCallback((id: string, amount: number): boolean => {
     if (amount <= 0) return false;
     const goal = savingsGoals.find((g) => g.id === id);
     if (!goal || goal.currentAmount < amount) {
@@ -339,12 +345,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
     showToast(`Withdrew ₹${amount} from goal back into liquid cash.`, 'info');
     return true;
-  };
+  }, [savingsGoals, showToast]);
 
   // Decision Lab Commit Action
-  const commitDecision = (decision: DecisionSimulationInput) => {
+  const commitDecision = useCallback((decision: DecisionSimulationInput) => {
     const { type, title, amount, category, commitmentId, goalId } = decision;
-    const numAmount = Number(amount) || 0;
+    const numAmount = Number(amount);
+
+    // Enforce amount validation at state-change layer for non-cancellation decisions
+    if (type !== 'cancel_subscription') {
+      if (isNaN(numAmount) || numAmount <= 0) {
+        showToast('Decision amount must be greater than ₹0 to commit.', 'warning');
+        return;
+      }
+    }
 
     if (type === 'discretionary_purchase' || type === 'unexpected_expense') {
       const newTx: Transaction = {
@@ -376,10 +390,8 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (commitmentId) {
         cancelCommitment(commitmentId);
       } else {
-        const firstActive = commitments.find((c) => c.status === 'upcoming');
-        if (firstActive) {
-          cancelCommitment(firstActive.id);
-        }
+        showToast('Please select a valid active subscription to cancel.', 'warning');
+        return;
       }
     } else if (type === 'savings_contribution') {
       const targetGoalId = goalId || savingsGoals[0]?.id;
@@ -389,20 +401,20 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
         showToast('No active savings goals found to contribute to.', 'error');
       }
     }
-  };
+  }, [cancelCommitment, config.currentDay, contributeToGoal, savingsGoals, showToast]);
 
   // Day & Config Settings
-  const setCurrentDay = (day: number) => {
+  const setCurrentDay = useCallback((day: number) => {
     const validDay = Math.min(30, Math.max(1, day));
     setConfig((prev) => ({ ...prev, currentDay: validDay }));
-  };
+  }, []);
 
-  const updateConfig = (updates: Partial<BudgetConfig>) => {
+  const updateConfig = useCallback((updates: Partial<BudgetConfig>) => {
     setConfig((prev) => ({ ...prev, ...updates }));
     showToast('Budget configuration updated', 'info');
-  };
+  }, [showToast]);
 
-  const resetDemoData = () => {
+  const resetDemoData = useCallback(() => {
     setTransactions(INITIAL_TRANSACTIONS);
     setCommitments(INITIAL_COMMITMENTS);
     setSavingsGoals(INITIAL_SAVINGS_GOALS);
@@ -412,40 +424,67 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.removeItem(STORAGE_KEYS.GOALS);
     localStorage.removeItem(STORAGE_KEYS.CONFIG);
     showToast('Demo reset to initial ₹10,000 / 30-day baseline state!', 'success');
-  };
+  }, [showToast]);
+
+  const contextValue = useMemo<FinanceContextType>(() => ({
+    transactions,
+    commitments,
+    savingsGoals,
+    config,
+    financialState,
+    activeTab,
+    setActiveTab,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addCommitment,
+    updateCommitment,
+    deleteCommitment,
+    markCommitmentPaid,
+    cancelCommitment,
+    addSavingsGoal,
+    updateSavingsGoal,
+    deleteSavingsGoal,
+    contributeToGoal,
+    withdrawFromGoal,
+    commitDecision,
+    setCurrentDay,
+    updateConfig,
+    resetDemoData,
+    toasts,
+    showToast,
+    dismissToast,
+  }), [
+    transactions,
+    commitments,
+    savingsGoals,
+    config,
+    financialState,
+    activeTab,
+    toasts,
+    addTransaction,
+    updateTransaction,
+    deleteTransaction,
+    addCommitment,
+    updateCommitment,
+    deleteCommitment,
+    markCommitmentPaid,
+    cancelCommitment,
+    addSavingsGoal,
+    updateSavingsGoal,
+    deleteSavingsGoal,
+    contributeToGoal,
+    withdrawFromGoal,
+    commitDecision,
+    setCurrentDay,
+    updateConfig,
+    resetDemoData,
+    showToast,
+    dismissToast,
+  ]);
 
   return (
-    <FinanceContext.Provider
-      value={{
-        transactions,
-        commitments,
-        savingsGoals,
-        config,
-        financialState,
-        activeTab,
-        setActiveTab,
-        addTransaction,
-        updateTransaction,
-        deleteTransaction,
-        addCommitment,
-        updateCommitment,
-        deleteCommitment,
-        markCommitmentPaid,
-        cancelCommitment,
-        addSavingsGoal,
-        updateSavingsGoal,
-        deleteSavingsGoal,
-        contributeToGoal,
-        withdrawFromGoal,
-        commitDecision,
-        setCurrentDay,
-        updateConfig,
-        resetDemoData,
-        toasts,
-        showToast,
-        dismissToast,
-      }}
-    >
+    <FinanceContext.Provider value={contextValue}>
       {children}
     </FinanceContext.Provider>
   );

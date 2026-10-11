@@ -3,12 +3,7 @@ import {
   TrendingUp,
   AlertTriangle,
   CheckCircle,
-  HelpCircle,
-  PieChart as PieIcon,
-  Activity,
-  ArrowRight,
   ShieldCheck,
-  Calendar,
   Sparkles,
   Info,
 } from 'lucide-react';
@@ -23,18 +18,16 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Legend,
   Line,
 } from 'recharts';
 import { useFinance } from '../../context/FinanceContext';
 import { RiskBadge } from '../common/Badge';
-import { formatINR, CATEGORY_MAP, formatCompactINR } from '../../utils/formatters';
+import { formatINR, CATEGORY_MAP } from '../../utils/formatters';
 
 export const InsightsView: React.FC = () => {
   const {
     transactions,
     commitments,
-    savingsGoals,
     config,
     financialState,
   } = useFinance();
@@ -255,16 +248,20 @@ export const InsightsView: React.FC = () => {
                       return (
                         <div className="p-3 bg-slate-900 border border-slate-700 rounded-xl shadow-xl text-xs space-y-1">
                           <p className="font-bold text-white mb-1.5">{label}</p>
-                          {payload.map((entry: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between gap-3">
-                              <span className="text-slate-400" style={{ color: entry.color }}>
-                                {entry.name}:
-                              </span>
-                              <span className="font-mono-num font-bold text-white">
-                                {formatINR(entry.value)}
-                              </span>
-                            </div>
-                          ))}
+                          {payload.map((entry, i: number) => {
+                            const val = typeof entry.value === 'number' ? entry.value : 0;
+                            const color = typeof entry.color === 'string' ? entry.color : '#94A3B8';
+                            return (
+                              <div key={i} className="flex items-center justify-between gap-3">
+                                <span className="text-slate-400" style={{ color }}>
+                                  {String(entry.name || '')}:
+                                </span>
+                                <span className="font-mono-num font-bold text-white">
+                                  {formatINR(val)}
+                                </span>
+                              </div>
+                            );
+                          })}
                         </div>
                       );
                     }

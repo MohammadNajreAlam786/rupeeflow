@@ -9,7 +9,6 @@ import {
   RotateCcw,
   Sparkles,
   Calendar,
-  ChevronRight,
   ShieldAlert,
 } from 'lucide-react';
 import { useFinance, ActiveTab } from '../../context/FinanceContext';
@@ -113,6 +112,10 @@ export const Sidebar: React.FC = () => {
           max="30"
           value={config.currentDay}
           onChange={(e) => setCurrentDay(Number(e.target.value))}
+          aria-label="Simulation day in 30-day budget period"
+          aria-valuemin={1}
+          aria-valuemax={30}
+          aria-valuenow={config.currentDay}
           className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
           title="Drag to simulate passing days in the 30-day cycle"
         />

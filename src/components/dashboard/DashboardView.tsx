@@ -3,7 +3,6 @@ import {
   Wallet,
   ShieldCheck,
   Calendar,
-  Sparkles,
   ArrowUpRight,
   ArrowDownLeft,
   CalendarClock,
@@ -14,7 +13,6 @@ import {
   CheckCircle2,
   Lock,
   ChevronRight,
-  TrendingDown,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { MetricCard } from '../common/MetricCard';
@@ -334,12 +332,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onOpenAddTransacti
                 Recent Cashflow Ledger
               </h3>
             </div>
-            <button
-              onClick={() => setActiveTab('transactions')}
-              className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1"
-            >
-              Full Ledger ({transactions.length}) <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onOpenAddTransaction}
+                className="px-2.5 py-1 text-xs font-semibold bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 border border-emerald-500/30 rounded-lg transition-colors cursor-pointer"
+              >
+                + Add
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('transactions')}
+                className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 cursor-pointer"
+              >
+                Full Ledger ({transactions.length}) <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="space-y-2.5">

@@ -91,10 +91,10 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
         )}
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <span className="block text-xs font-medium text-slate-400 mb-1.5">
             Commitment Nature
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+          </span>
+          <div className="grid grid-cols-2 gap-2" role="group" aria-label="Commitment Nature">
             <button
               type="button"
               onClick={() => setType('subscription')}
@@ -121,10 +121,11 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="com-title" className="block text-xs font-medium text-slate-400 mb-1.5">
             Title / Provider
           </label>
           <input
+            id="com-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -135,7 +136,7 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="com-amount" className="block text-xs font-medium text-slate-400 mb-1.5">
             Amount Due (₹)
           </label>
           <div className="relative">
@@ -143,6 +144,7 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
               ₹
             </span>
             <input
+              id="com-amount"
               type="number"
               min="1"
               value={amount}
@@ -155,10 +157,11 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+            <label htmlFor="com-category" className="block text-xs font-medium text-slate-400 mb-1.5">
               Category
             </label>
             <select
+              id="com-category"
               value={category}
               onChange={(e) => setCategory(e.target.value as ExpenseCategory)}
               className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
@@ -172,10 +175,11 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">
+            <label htmlFor="com-due-day" className="block text-xs font-medium text-slate-400 mb-1.5">
               Due on Day (1-30)
             </label>
             <input
+              id="com-due-day"
               type="number"
               min="1"
               max="30"
@@ -187,10 +191,11 @@ export const CommitmentModal: React.FC<CommitmentModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="com-notes" className="block text-xs font-medium text-slate-400 mb-1.5">
             Notes (Optional)
           </label>
           <input
+            id="com-notes"
             type="text"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}

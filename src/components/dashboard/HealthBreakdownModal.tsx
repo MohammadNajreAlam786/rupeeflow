@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, AlertTriangle, CheckCircle, Info, Sparkles, Scale } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Info, Scale } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { RiskBadge } from '../common/Badge';
 import { HealthScoreBreakdown } from '../../types/finance';

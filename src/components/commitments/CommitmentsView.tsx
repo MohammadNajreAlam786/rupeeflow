@@ -8,14 +8,12 @@ import {
   Edit2,
   Trash2,
   Info,
-  Layers,
-  Sparkles,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Commitment, CommitmentStatus } from '../../types/finance';
 import { CommitmentModal } from './CommitmentModal';
 import { CommitmentStatusBadge } from '../common/Badge';
-import { formatINR, CATEGORY_MAP, formatDate } from '../../utils/formatters';
+import { formatINR, formatDate } from '../../utils/formatters';
 
 export const CommitmentsView: React.FC = () => {
   const {
@@ -197,9 +195,7 @@ export const CommitmentsView: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-slate-800/60 font-mono-num">
                 {filteredCommitments.map((com) => {
-                  const meta = CATEGORY_MAP[com.category] || CATEGORY_MAP.other;
                   const isUpcoming = com.status === 'upcoming';
-                  const daysLeft = com.dueDayInPeriod - config.currentDay;
 
                   return (
                     <tr

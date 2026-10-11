@@ -3,7 +3,6 @@ import {
   FlaskConical,
   Plus,
   RotateCcw,
-  Calendar,
   Sparkles,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';

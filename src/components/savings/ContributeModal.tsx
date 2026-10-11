@@ -106,7 +106,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
 
         {/* Amount */}
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="contribute-amount" className="block text-xs font-medium text-slate-400 mb-1.5">
             Amount (₹)
           </label>
           <div className="relative">
@@ -114,6 +114,7 @@ export const ContributeModal: React.FC<ContributeModalProps> = ({
               ₹
             </span>
             <input
+              id="contribute-amount"
               type="number"
               min="1"
               value={amount}

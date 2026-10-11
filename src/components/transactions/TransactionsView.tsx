@@ -3,14 +3,10 @@ import {
   Receipt,
   Plus,
   Search,
-  Filter,
   ArrowUpRight,
   ArrowDownLeft,
   Edit2,
   Trash2,
-  Calendar,
-  Layers,
-  ArrowUpDown,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import { Transaction, TransactionType } from '../../types/finance';
@@ -29,7 +25,7 @@ export const TransactionsView: React.FC = () => {
   // Search & Filtering State
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [categoryFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'day_desc' | 'day_asc' | 'amount_desc' | 'amount_asc'>('day_desc');
 
   // Modal State
@@ -154,9 +150,11 @@ export const TransactionsView: React.FC = () => {
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
+            id="transaction-search-input"
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Search transactions, notes, or merchants"
             placeholder="Search transactions, notes, merchants..."
             className="w-full pl-9 pr-3.5 py-2 bg-slate-900 border border-slate-700/80 rounded-xl text-white text-xs placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
           />
@@ -165,7 +163,7 @@ export const TransactionsView: React.FC = () => {
         {/* Filter Controls */}
         <div className="flex items-center gap-2 flex-wrap">
           {/* Type Filter */}
-          <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800">
+          <div className="flex items-center bg-slate-900 p-0.5 rounded-xl border border-slate-800" role="group" aria-label="Filter transactions by type">
             <button
               onClick={() => setTypeFilter('all')}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
@@ -198,8 +196,10 @@ export const TransactionsView: React.FC = () => {
 
           {/* Sort Selector */}
           <select
+            id="transaction-sort-select"
+            aria-label="Sort transactions by"
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'day_desc' | 'day_asc' | 'amount_desc' | 'amount_asc')}
             className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl text-white text-xs focus:outline-none"
           >
             <option value="day_desc">Day: Latest First</option>

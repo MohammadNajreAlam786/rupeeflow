@@ -75,10 +75,11 @@ export const GoalModal: React.FC<GoalModalProps> = ({
         )}
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="goal-title" className="block text-xs font-medium text-slate-400 mb-1.5">
             Goal Name
           </label>
           <input
+            id="goal-title"
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -89,7 +90,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="goal-target-amount" className="block text-xs font-medium text-slate-400 mb-1.5">
             Target Amount (₹)
           </label>
           <div className="relative">
@@ -97,6 +98,7 @@ export const GoalModal: React.FC<GoalModalProps> = ({
               ₹
             </span>
             <input
+              id="goal-target-amount"
               type="number"
               min="1"
               step="any"
@@ -109,12 +111,13 @@ export const GoalModal: React.FC<GoalModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <label htmlFor="goal-category" className="block text-xs font-medium text-slate-400 mb-1.5">
             Category
           </label>
           <select
+            id="goal-category"
             value={category}
-            onChange={(e) => setCategory(e.target.value as any)}
+            onChange={(e) => setCategory(e.target.value as SavingsGoal['category'])}
             className="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-amber-500"
           >
             <option value="emergency">Emergency / Safety Cushion</option>
@@ -126,15 +129,17 @@ export const GoalModal: React.FC<GoalModalProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-slate-400 mb-1.5">
+          <span className="block text-xs font-medium text-slate-400 mb-1.5">
             Color Accent
-          </label>
-          <div className="flex items-center gap-3">
+          </span>
+          <div className="flex items-center gap-3" role="group" aria-label="Color accent options">
             {COLOR_OPTIONS.map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => setColor(c)}
+                aria-label={`Select color ${c}`}
+                aria-pressed={color === c}
                 className={`w-7 h-7 rounded-full transition-transform ${
                   color === c ? 'scale-125 ring-2 ring-white' : 'opacity-80 hover:opacity-100'
                 }`}

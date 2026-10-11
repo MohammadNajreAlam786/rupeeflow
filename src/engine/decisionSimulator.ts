@@ -62,14 +62,6 @@ export function simulateFinancialDecision(
       simulatedCommitments = simulatedCommitments.map((c) =>
         c.id === commitmentId ? { ...c, status: 'cancelled' as const } : c
       );
-    } else {
-      // Find highest active subscription or fallback
-      const activeSub = simulatedCommitments.find((c) => c.status === 'upcoming');
-      if (activeSub) {
-        simulatedCommitments = simulatedCommitments.map((c) =>
-          c.id === activeSub.id ? { ...c, status: 'cancelled' as const } : c
-        );
-      }
     }
   } else if (type === 'savings_contribution') {
     if (goalId) {
@@ -183,11 +175,15 @@ export function simulateFinancialDecision(
     } points.`;
   } else if (type === 'cancel_subscription') {
     const freedAmount = Math.abs(delta.safeToSpend);
-    explanation = `Cancelling this subscription frees up ${formatINR(
-      freedAmount
-    )} in reserved funds. Your safe-to-spend capacity increases, adding +${formatINR(
-      delta.dailyAllowance
-    )}/day to your daily budget for the rest of the period.`;
+    if (freedAmount > 0) {
+      explanation = `Cancelling this subscription frees up ${formatINR(
+        freedAmount
+      )} in reserved funds. Your safe-to-spend capacity increases, adding +${formatINR(
+        delta.dailyAllowance
+      )}/day to your daily budget for the rest of the period.`;
+    } else {
+      explanation = `Please select an active recurring subscription to simulate the impact of unreserving its monthly charge.`;
+    }
   } else if (type === 'savings_contribution') {
     explanation = `Transferring ${formatINR(numAmount)} to your savings locks it safely away from impulsive spending. Your liquid daily allowance tightens by ${formatINR(
       Math.abs(delta.dailyAllowance)
