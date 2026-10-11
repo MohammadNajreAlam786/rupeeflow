@@ -76,6 +76,7 @@ export interface DecisionSimulationInput {
   category?: Category;
   commitmentId?: string; // for cancel_subscription
   goalId?: string; // for savings_contribution
+  operationId?: string; // idempotency key for preventing duplicate execution
 }
 
 export type RiskLevel = 'low' | 'moderate' | 'high';

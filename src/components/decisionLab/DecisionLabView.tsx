@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   FlaskConical,
   ArrowRight,
@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Check,
   X,
+  Loader2,
 } from 'lucide-react';
 import { useFinance } from '../../context/FinanceContext';
 import {
@@ -33,6 +34,7 @@ export const DecisionLabView: React.FC = () => {
     config,
     commitDecision,
     showToast,
+    setActiveTab,
   } = useFinance();
 
   // Simulation Form State
@@ -43,6 +45,15 @@ export const DecisionLabView: React.FC = () => {
   const [selectedCommitmentId, setSelectedCommitmentId] = useState<string>('');
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
   const [selectedPresetLabel, setSelectedPresetLabel] = useState<string | null>(null);
+
+  // Synchronous submission lock & UI submitting status
+  const isSubmittingRef = useRef<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [committedState, setCommittedState] = useState<{
+    title: string;
+    amount: number;
+    type: DecisionType;
+  } | null>(null);
 
   // Active upcoming commitments eligible for cancellation
   const activeSubs = commitments.filter((c) => c.status === 'upcoming');
@@ -132,6 +143,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Handle Preset Click
   const handleApplyPreset = (preset: typeof PRESETS[0]) => {
+    setCommittedState(null);
     setSelectedPresetLabel(preset.label);
     setDecisionType(preset.type);
     setTitle(preset.title);
@@ -154,6 +166,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Synchronized decision type switcher
   const handleSelectDecisionType = (type: DecisionType) => {
+    setCommittedState(null);
     setSelectedPresetLabel(null);
     setDecisionType(type);
     if (type === 'cancel_subscription') {
@@ -181,6 +194,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Synchronized subscription select handler
   const handleSelectSubscription = (subId: string) => {
+    setCommittedState(null);
     setSelectedPresetLabel(null);
     setSelectedCommitmentId(subId);
     const found = activeSubs.find((c) => c.id === subId);
@@ -193,22 +207,34 @@ export const DecisionLabView: React.FC = () => {
     }
   };
 
-  // Commit decision into live state
+  // Commit decision into live state with synchronous lock, operationId, and success confirmation state
   const handleCommit = () => {
-    if (!isAmountValid) return;
-    commitDecision(simulationInput);
-    // Reset to clean default state
-    setDecisionType('discretionary_purchase');
-    setAmount(1500);
-    setTitle('Weekend Concert & Dinner');
-    setSelectedCategory('shopping');
-    setSelectedCommitmentId('');
-    setSelectedGoalId('');
-    setSelectedPresetLabel(null);
+    if (isSubmittingRef.current || !isAmountValid) return;
+    isSubmittingRef.current = true;
+    setIsSubmitting(true);
+
+    try {
+      const operationId = `op_dec_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+      const success = commitDecision({ ...simulationInput, operationId });
+      if (success) {
+        setCommittedState({
+          title: simulationInput.title || (simulationInput.type === 'discretionary_purchase' ? 'Discretionary Purchase' : 'Decision'),
+          amount: simulationInput.amount,
+          type: simulationInput.type,
+        });
+      }
+    } catch (err) {
+      console.error('Commit failed', err);
+      showToast('An error occurred while committing the decision.', 'error');
+    } finally {
+      isSubmittingRef.current = false;
+      setIsSubmitting(false);
+    }
   };
 
   // Reset simulation sandbox to initial default state
   const handleResetSandbox = () => {
+    setCommittedState(null);
     setDecisionType('discretionary_purchase');
     setAmount(1500);
     setTitle('Weekend Concert & Dinner');
@@ -217,6 +243,18 @@ export const DecisionLabView: React.FC = () => {
     setSelectedGoalId('');
     setSelectedPresetLabel(null);
     showToast('Decision Lab sandbox restored to default hypothetical scenario', 'info');
+  };
+
+  // Explicit re-arming interaction for new simulations
+  const handleArmNewScenario = () => {
+    setCommittedState(null);
+    setDecisionType('discretionary_purchase');
+    setAmount(1500);
+    setTitle('Weekend Concert & Dinner');
+    setSelectedCategory('shopping');
+    setSelectedCommitmentId('');
+    setSelectedGoalId('');
+    setSelectedPresetLabel(null);
   };
 
   return (
@@ -382,6 +420,7 @@ export const DecisionLabView: React.FC = () => {
                 value={amount}
                 disabled={decisionType === 'cancel_subscription'}
                 onChange={(e) => {
+                  setCommittedState(null);
                   setSelectedPresetLabel(null);
                   setAmount(Math.max(0, Number(e.target.value)));
                 }}
@@ -400,6 +439,7 @@ export const DecisionLabView: React.FC = () => {
                     key={step}
                     type="button"
                     onClick={() => {
+                      setCommittedState(null);
                       setSelectedPresetLabel(null);
                       setAmount((prev) => (prev || 0) + step);
                     }}
@@ -411,6 +451,7 @@ export const DecisionLabView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
+                    setCommittedState(null);
                     setSelectedPresetLabel(null);
                     setAmount(500);
                   }}
@@ -436,6 +477,7 @@ export const DecisionLabView: React.FC = () => {
               type="text"
               value={title}
               onChange={(e) => {
+                setCommittedState(null);
                 setSelectedPresetLabel(null);
                 setTitle(e.target.value);
               }}
@@ -475,6 +517,7 @@ export const DecisionLabView: React.FC = () => {
                 id="decision-goal-select"
                 value={selectedGoalId}
                 onChange={(e) => {
+                  setCommittedState(null);
                   setSelectedPresetLabel(null);
                   setSelectedGoalId(e.target.value);
                 }}
@@ -498,6 +541,7 @@ export const DecisionLabView: React.FC = () => {
                 id="decision-expense-category-select"
                 value={selectedCategory}
                 onChange={(e) => {
+                  setCommittedState(null);
                   setSelectedPresetLabel(null);
                   setSelectedCategory(e.target.value as Category);
                 }}
@@ -521,6 +565,7 @@ export const DecisionLabView: React.FC = () => {
                 id="decision-income-category-select"
                 value={selectedCategory}
                 onChange={(e) => {
+                  setCommittedState(null);
                   setSelectedPresetLabel(null);
                   setSelectedCategory(e.target.value as Category);
                 }}
@@ -813,45 +858,97 @@ export const DecisionLabView: React.FC = () => {
             </div>
           </div>
 
-          {/* Action Execution Footer: Commit vs Cancel */}
-          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-semibold text-white">Ready to enact this decision?</span>
-              <p className="text-[11px] text-slate-400">
-                Committing permanently records this in your active ledger or updates your commitments.
-              </p>
-              {validationMessage && (
-                <div className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg mt-2">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
-                  <span>{validationMessage}</span>
+          {/* Action Execution Footer: Commit vs Cancel / Success Confirmation */}
+          <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+            {committedState ? (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/30">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-emerald-300">Decision Enacted & Recorded</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold uppercase tracking-wide">
+                        In Ledger
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      &quot;{committedState.title}&quot; ({formatINR(committedState.amount)}) was successfully committed.
+                    </p>
+                  </div>
                 </div>
-              )}
-            </div>
 
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={handleResetSandbox}
-                className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors"
-              >
-                Cancel / Revert
-              </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('transactions')}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl transition-colors flex items-center justify-center gap-1.5"
+                  >
+                    <span>View in Ledger</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleArmNewScenario}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-bold text-slate-950 bg-emerald-400 hover:bg-emerald-300 rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-glow-emerald cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Simulate Another Decision</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div>
+                  <span className="text-xs font-semibold text-white">Ready to enact this decision?</span>
+                  <p className="text-[11px] text-slate-400">
+                    Committing permanently records this in your active ledger or updates your commitments.
+                  </p>
+                  {validationMessage && (
+                    <div className="flex items-center gap-1.5 text-xs text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1.5 rounded-lg mt-2">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                      <span>{validationMessage}</span>
+                    </div>
+                  )}
+                </div>
 
-              <button
-                type="button"
-                onClick={handleCommit}
-                disabled={!isAmountValid}
-                className={`flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
-                  isAmountValid
-                    ? 'text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-glow-emerald cursor-pointer'
-                    : 'text-slate-500 bg-slate-800 border border-slate-700 cursor-not-allowed opacity-60'
-                }`}
-                aria-disabled={!isAmountValid}
-              >
-                <Check className="w-4 h-4" />
-                <span>Commit Decision</span>
-              </button>
-            </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleResetSandbox}
+                    disabled={isSubmitting}
+                    className="flex-1 sm:flex-initial px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors disabled:opacity-50"
+                  >
+                    Cancel / Revert
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCommit}
+                    disabled={!isAmountValid || isSubmitting}
+                    className={`flex-1 sm:flex-initial px-5 py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2 ${
+                      isAmountValid && !isSubmitting
+                        ? 'text-slate-950 bg-emerald-400 hover:bg-emerald-300 shadow-glow-emerald cursor-pointer'
+                        : 'text-slate-500 bg-slate-800 border border-slate-700 cursor-not-allowed opacity-60'
+                    }`}
+                    aria-disabled={!isAmountValid || isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-slate-950" />
+                        <span>Enacting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4" />
+                        <span>Commit Decision</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

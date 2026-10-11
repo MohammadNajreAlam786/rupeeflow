@@ -1,7 +1,7 @@
 // RupeeFlow Central Finance Context
 // Handles persistent storage, pure state calculations, CRUD operations, and simulation commits.
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Transaction,
@@ -72,7 +72,7 @@ interface FinanceContextType {
   withdrawFromGoal: (id: string, amount: number) => boolean;
 
   // Decision Lab
-  commitDecision: (decision: DecisionSimulationInput) => void;
+  commitDecision: (decision: DecisionSimulationInput) => boolean;
 
   // Time & Budget Settings
   setCurrentDay: (day: number) => void;
@@ -133,6 +133,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [toasts, setToasts] = useState<ToastNotification[]>([]);
+  const processedOperationsRef = useRef<Set<string>>(new Set());
 
   // 2. Persist to localStorage on mutation
   useEffect(() => {
@@ -258,7 +259,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const cancelCommitment = useCallback((id: string) => {
     const item = commitments.find((c) => c.id === id);
-    if (!item) return;
+    if (!item || item.status === 'cancelled') return;
 
     setCommitments((prev) =>
       prev.map((c) => (c.id === id ? { ...c, status: 'cancelled' as const } : c))
@@ -347,22 +348,32 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return true;
   }, [savingsGoals, showToast]);
 
-  // Decision Lab Commit Action
-  const commitDecision = useCallback((decision: DecisionSimulationInput) => {
-    const { type, title, amount, category, commitmentId, goalId } = decision;
+  // Decision Lab Commit Action with Idempotency Guard
+  const commitDecision = useCallback((decision: DecisionSimulationInput): boolean => {
+    const { type, title, amount, category, commitmentId, goalId, operationId } = decision;
+
+    // Guard against repeated execution of the exact same commit operation
+    if (operationId) {
+      if (processedOperationsRef.current.has(operationId)) {
+        return false;
+      }
+      processedOperationsRef.current.add(operationId);
+    }
+
     const numAmount = Number(amount);
 
     // Enforce amount validation at state-change layer for non-cancellation decisions
     if (type !== 'cancel_subscription') {
       if (isNaN(numAmount) || numAmount <= 0) {
+        if (operationId) processedOperationsRef.current.delete(operationId);
         showToast('Decision amount must be greater than ₹0 to commit.', 'warning');
-        return;
+        return false;
       }
     }
 
     if (type === 'discretionary_purchase' || type === 'unexpected_expense') {
       const newTx: Transaction = {
-        id: `tx_dec_${Date.now()}`,
+        id: `tx_dec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title: title || (type === 'discretionary_purchase' ? 'Discretionary Purchase' : 'Unexpected Expense'),
         amount: numAmount,
         type: 'expense',
@@ -373,9 +384,10 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       setTransactions((prev) => [newTx, ...prev]);
       showToast(`Decision Committed: -₹${numAmount} logged as expense.`, 'success');
+      return true;
     } else if (type === 'new_income') {
       const newTx: Transaction = {
-        id: `tx_dec_${Date.now()}`,
+        id: `tx_dec_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         title: title || 'New Income',
         amount: numAmount,
         type: 'income',
@@ -386,22 +398,43 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
       };
       setTransactions((prev) => [newTx, ...prev]);
       showToast(`Decision Committed: +₹${numAmount} added to balance.`, 'success');
+      return true;
     } else if (type === 'cancel_subscription') {
-      if (commitmentId) {
-        cancelCommitment(commitmentId);
-      } else {
+      if (!commitmentId) {
+        if (operationId) processedOperationsRef.current.delete(operationId);
         showToast('Please select a valid active subscription to cancel.', 'warning');
-        return;
+        return false;
       }
+      const targetCommitment = commitments.find((c) => c.id === commitmentId);
+      if (!targetCommitment) {
+        if (operationId) processedOperationsRef.current.delete(operationId);
+        showToast('Selected subscription not found.', 'error');
+        return false;
+      }
+      if (targetCommitment.status === 'cancelled') {
+        if (operationId) processedOperationsRef.current.delete(operationId);
+        showToast(`"${targetCommitment.title}" is already cancelled.`, 'info');
+        return false;
+      }
+      cancelCommitment(commitmentId);
+      return true;
     } else if (type === 'savings_contribution') {
       const targetGoalId = goalId || savingsGoals[0]?.id;
-      if (targetGoalId) {
-        contributeToGoal(targetGoalId, numAmount);
-      } else {
+      if (!targetGoalId) {
+        if (operationId) processedOperationsRef.current.delete(operationId);
         showToast('No active savings goals found to contribute to.', 'error');
+        return false;
       }
+      const success = contributeToGoal(targetGoalId, numAmount);
+      if (!success && operationId) {
+        processedOperationsRef.current.delete(operationId);
+      }
+      return success;
     }
-  }, [cancelCommitment, config.currentDay, contributeToGoal, savingsGoals, showToast]);
+
+    if (operationId) processedOperationsRef.current.delete(operationId);
+    return false;
+  }, [cancelCommitment, commitments, config.currentDay, contributeToGoal, savingsGoals, showToast]);
 
   // Day & Config Settings
   const setCurrentDay = useCallback((day: number) => {
@@ -419,6 +452,7 @@ export const FinanceProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setCommitments(INITIAL_COMMITMENTS);
     setSavingsGoals(INITIAL_SAVINGS_GOALS);
     setConfig(DEFAULT_BUDGET_CONFIG);
+    processedOperationsRef.current.clear();
     localStorage.removeItem(STORAGE_KEYS.TRANSACTIONS);
     localStorage.removeItem(STORAGE_KEYS.COMMITMENTS);
     localStorage.removeItem(STORAGE_KEYS.GOALS);
