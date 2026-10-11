@@ -32,6 +32,7 @@ export const DecisionLabView: React.FC = () => {
     savingsGoals,
     config,
     commitDecision,
+    showToast,
   } = useFinance();
 
   // Simulation Form State
@@ -41,6 +42,7 @@ export const DecisionLabView: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<Category>('shopping');
   const [selectedCommitmentId, setSelectedCommitmentId] = useState<string>('');
   const [selectedGoalId, setSelectedGoalId] = useState<string>('');
+  const [selectedPresetLabel, setSelectedPresetLabel] = useState<string | null>(null);
 
   // Active upcoming commitments eligible for cancellation
   const activeSubs = commitments.filter((c) => c.status === 'upcoming');
@@ -130,6 +132,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Handle Preset Click
   const handleApplyPreset = (preset: typeof PRESETS[0]) => {
+    setSelectedPresetLabel(preset.label);
     setDecisionType(preset.type);
     setTitle(preset.title);
     if (preset.type === 'cancel_subscription') {
@@ -151,6 +154,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Synchronized decision type switcher
   const handleSelectDecisionType = (type: DecisionType) => {
+    setSelectedPresetLabel(null);
     setDecisionType(type);
     if (type === 'cancel_subscription') {
       if (selectedCommitmentId) {
@@ -177,6 +181,7 @@ export const DecisionLabView: React.FC = () => {
 
   // Synchronized subscription select handler
   const handleSelectSubscription = (subId: string) => {
+    setSelectedPresetLabel(null);
     setSelectedCommitmentId(subId);
     const found = activeSubs.find((c) => c.id === subId);
     if (found) {
@@ -192,20 +197,26 @@ export const DecisionLabView: React.FC = () => {
   const handleCommit = () => {
     if (!isAmountValid) return;
     commitDecision(simulationInput);
-    // Reset to clean state
-    setTitle('Weekend Concert & Dinner');
-    setAmount(1500);
+    // Reset to clean default state
     setDecisionType('discretionary_purchase');
+    setAmount(1500);
+    setTitle('Weekend Concert & Dinner');
+    setSelectedCategory('shopping');
     setSelectedCommitmentId('');
+    setSelectedGoalId('');
+    setSelectedPresetLabel(null);
   };
 
-  // Reset simulation sandbox
+  // Reset simulation sandbox to initial default state
   const handleResetSandbox = () => {
     setDecisionType('discretionary_purchase');
     setAmount(1500);
     setTitle('Weekend Concert & Dinner');
     setSelectedCategory('shopping');
     setSelectedCommitmentId('');
+    setSelectedGoalId('');
+    setSelectedPresetLabel(null);
+    showToast('Decision Lab sandbox restored to default hypothetical scenario', 'info');
   };
 
   return (
@@ -247,15 +258,23 @@ export const DecisionLabView: React.FC = () => {
           <span>Quick Gen Z Scenarios:</span>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {PRESETS.map((preset, idx) => (
-            <button
-              key={idx}
-              onClick={() => handleApplyPreset(preset)}
-              className="text-xs font-medium px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 text-slate-300 hover:text-white transition-all shadow-sm"
-            >
-              {preset.label}
-            </button>
-          ))}
+          {PRESETS.map((preset, idx) => {
+            const isSelected = selectedPresetLabel === preset.label;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => handleApplyPreset(preset)}
+                className={`text-xs font-medium px-3 py-1.5 rounded-xl border transition-all shadow-sm ${
+                  isSelected
+                    ? 'bg-indigo-600/25 border-indigo-400 text-white font-semibold ring-1 ring-indigo-400/40 shadow-glow-indigo'
+                    : 'bg-slate-900 border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/80 text-slate-300 hover:text-white'
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -362,7 +381,10 @@ export const DecisionLabView: React.FC = () => {
                 step="50"
                 value={amount}
                 disabled={decisionType === 'cancel_subscription'}
-                onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
+                onChange={(e) => {
+                  setSelectedPresetLabel(null);
+                  setAmount(Math.max(0, Number(e.target.value)));
+                }}
                 className={`w-full pl-8 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-xl text-white font-mono-num font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors ${
                   decisionType === 'cancel_subscription' ? 'opacity-60 cursor-not-allowed' : ''
                 }`}
@@ -377,7 +399,10 @@ export const DecisionLabView: React.FC = () => {
                   <button
                     key={step}
                     type="button"
-                    onClick={() => setAmount((prev) => (prev || 0) + step)}
+                    onClick={() => {
+                      setSelectedPresetLabel(null);
+                      setAmount((prev) => (prev || 0) + step);
+                    }}
                     className="px-2.5 py-1 text-xs rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-mono-num transition-colors"
                   >
                     +{step}
@@ -385,7 +410,10 @@ export const DecisionLabView: React.FC = () => {
                 ))}
                 <button
                   type="button"
-                  onClick={() => setAmount(500)}
+                  onClick={() => {
+                    setSelectedPresetLabel(null);
+                    setAmount(500);
+                  }}
                   className="px-2 py-1 text-xs rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 transition-colors"
                 >
                   Clear
@@ -407,7 +435,10 @@ export const DecisionLabView: React.FC = () => {
               id="decision-title-input"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setSelectedPresetLabel(null);
+                setTitle(e.target.value);
+              }}
               className="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-indigo-500 transition-colors"
               placeholder="e.g. Weekend PVR movie or Swiggy treat"
             />
@@ -443,7 +474,10 @@ export const DecisionLabView: React.FC = () => {
               <select
                 id="decision-goal-select"
                 value={selectedGoalId}
-                onChange={(e) => setSelectedGoalId(e.target.value)}
+                onChange={(e) => {
+                  setSelectedPresetLabel(null);
+                  setSelectedGoalId(e.target.value);
+                }}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
                 {savingsGoals.map((g) => (
@@ -463,7 +497,10 @@ export const DecisionLabView: React.FC = () => {
               <select
                 id="decision-expense-category-select"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as Category)}
+                onChange={(e) => {
+                  setSelectedPresetLabel(null);
+                  setSelectedCategory(e.target.value as Category);
+                }}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
                 {EXPENSE_CATEGORIES.map((cat) => (
@@ -483,7 +520,10 @@ export const DecisionLabView: React.FC = () => {
               <select
                 id="decision-income-category-select"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value as Category)}
+                onChange={(e) => {
+                  setSelectedPresetLabel(null);
+                  setSelectedCategory(e.target.value as Category);
+                }}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:border-indigo-500"
               >
                 {INCOME_CATEGORIES.map((cat) => (

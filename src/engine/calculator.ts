@@ -24,17 +24,14 @@ export function calculateFinancialState(
     minDailySurvivalBudget = 150,
   } = config;
 
-  // Filter out any hypothetical simulated items that might have slipped into live list
-  const liveTransactions = transactions.filter((t) => !t.isSimulated);
-
   // 1. Calculate Income & Expenses
-  const additionalIncome = liveTransactions
+  const additionalIncome = transactions
     .filter((t) => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
 
   const totalIncome = initialBudget + additionalIncome;
 
-  const totalExpenses = liveTransactions
+  const totalExpenses = transactions
     .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
 
