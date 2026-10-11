@@ -1,6 +1,6 @@
 # RupeeFlow — Gen Z Financial Decision Engine 💸⚡
 
-> Built for the **PROMPT RUN Vibe Coding Hackathon**  
+> An individual submission developed for the **PROMPT RUN Vibe Coding Hackathon**  
 > *Master a limited ₹10,000 budget over 30 days. Simulate every decision before spending a single rupee.*
 
 ![RupeeFlow License](https://img.shields.io/badge/License-MIT-emerald.svg)
@@ -74,7 +74,7 @@ Gen Z students and early-career pros in India often struggle with managing a fix
 
 ## 🧮 Interconnected Financial Engine & Accounting Rules
 
-RupeeFlow enforces strict mathematical invariants managed by a single source of truth in [`src/engine/calculator.ts`](file:///c:/Users/najre/Desktop/RupeeFlow/src/engine/calculator.ts):
+RupeeFlow enforces strict mathematical invariants managed by a single source of truth in [`src/engine/calculator.ts`](src/engine/calculator.ts):
 
 ```
 1. Total Available Income = Initial Budget (₹10,000) + Additional Income Transactions
@@ -124,7 +124,7 @@ RupeeFlow enforces strict mathematical invariants managed by a single source of 
 ### Installation & Run
 ```bash
 # 1. Clone repository
-git clone https://github.com/your-username/rupeeflow.git
+git clone https://github.com/MohammadNajreAlam786/rupeeflow.git
 cd rupeeflow
 
 # 2. Install dependencies
@@ -158,7 +158,7 @@ npm run preview
 6. Output Directory: `dist`.
 7. Click **Deploy**.
 
-> Note: The included [`vercel.json`](file:///c:/Users/najre/Desktop/RupeeFlow/vercel.json) already configures SPA route rewrites (`/(.*) -> /index.html`).
+> Note: The included [`vercel.json`](vercel.json) already configures SPA route rewrites (`/(.*) -> /index.html`).
 
 ---
 
@@ -184,4 +184,4 @@ npm run preview
 ---
 
 ## 📄 License
-MIT License © 2026 PROMPT RUN Vibe Coding Hackathon Team.
+MIT License © 2026. All rights reserved.
